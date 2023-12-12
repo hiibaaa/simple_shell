@@ -1,69 +1,151 @@
-#include "main.h"
-	int
-main(void)
+#include "shell.h"
+
+/**
+ * tknize - The tokenize function tokenizes a string.
+ * @strng: indicates string
+ * Return: array of string.
+*/
+char **tknize(char *strng)
 {
-	int i = 0;
-	char *line = NULL;
-	char *command = NULL;
-	char **arguments = NULL;
-	char *line_copy = NULL;
-	int interactive = isatty(STDIN_FILENO);
+	char *tkn, **tkns = NULL, s[] = " \n\t";
+	int x = 0;
 
-	while (1)
+	if (!strng)
+		return (NULL);
+
+	tkn = strtok(strng, s);
+	if (!tkn)
 	{
-		if (interactive)
-		{
-			display_prompt();
-		}
-		line = read_command();
+		free(strng);
+		return (NULL);
+	}
 
-		if (line == NULL)
-		{
-			break;
-		}
-		line_copy = strdup(line);
-		command = strtok(line_copy, " \t\n");
+	tkns = malloc(sizeof(char *) * 1024);
+	if (tkns == NULL)
+	{
+		free(tkns);
+		free(strng);
+		perror("realloc");
+		exit(EXIT_FAILURE);
+	}
 
-		if (command != NULL)
-		{
-			arguments = pased_arguments(line);
+	while (tkn)
+	{
+		tkns[x] = tkn;
+		tkn = strtok(NULL, s);
+		x++;
+	}
+	tkns[x] = NULL;
+	return (tkns);
+}
+/**
+ * g_evr - indicates function env path
+ * @env_lbl: indicates the path name
+ * Return: string is returned or null if otherwise
+*/
+char *g_evr(char *env_lbl)
+{
+	int x = 0, c, lnk;
 
-			if (strcmp(command, "exit") == 0)
+	lnk = slen(env_lbl);
+	while (environ[x] != NULL)
+	{
+		for (c = 0; environ[x][c] && c < lnk; c++)
+			if (environ[x][c] == '=' || environ[x][c] != env_lbl[c])
+				break;
+
+		if (c == lnk && environ[x][c] == '=')
+			return (environ[x] + lnk + 1);
+
+		x++;
+	}
+	return (NULL);
+}
+/**
+ * g_comnd - function looks if command exists in path
+ * @comnd: the command
+ * Return: full path of command
+*/
+
+char *g_comnd(char *comnd)
+{
+	char *p, *t, *cmd;
+	struct stat st;
+
+	if (stat(comnd, &st) == 0)
+		return (comnd);
+
+	p = g_evr("PATH");
+	t = strtok(p, ":");
+	while (t)
+	{
+		cmd = malloc((slen(t) + slen(comnd) + 2) * sizeof(char));
+		scopy(cmd, t);
+		scncat(cmd, "/");
+		scncat(cmd, comnd);
+		if (stat(cmd, &st) == 0)
+			return (cmd);
+		free(cmd);
+		t = strtok(NULL, ":");
+	}
+	return (NULL);
+}
+
+
+/**
+ * tkn_free - functions free tokens
+ * @tkn: the array string.
+*/
+void tkn_free(char **tkn)
+{
+
+	if (!tkn)
+		return;
+
+	free(tkn[0]);
+
+	free(tkn);
+}
+
+/**
+ * ext_sh - function exits program
+ * @tkn: string array
+ * @arv: the argument vector
+ * @dsh: num line
+ * @stats: the status
+ * @bufr: the buffer
+*/
+void ext_sh(char **tkn, char **arv, int dsh, int stats, char *bufr)
+{
+	int cde;
+
+	if (scmp(tkn[0], "exit") == 0)
+	{
+		if (tkn[1])
+		{
+			cde = mk_asctoint(tkn[1]);
+			if (cde < 0)
 			{
-				while (arguments[i])
-				{
-					free(arguments[i]);
-					i++;
-				}
-				free(arguments);
-				free(line);
-				free(line_copy);
-				return (0);
+				invalid_num(arv[0], dsh, tkn[1]);
+				free(tkn);
+				free(bufr);
+				exit(2);
 			}
-			else if (strcmp(command, "ls") == 0)
+			else if (cde > 255)
 			{
-				char command_path[] = "/bin/ls";
-
-				execute_command(command_path, arguments, &line);
-			}
-			else if (strcmp(command, "env") == 0)
-			{
-				print_environment();
+				free(tkn);
+				free(bufr);
+				exit(232);
 			}
 			else
 			{
-				execute_command(command, arguments, &line);
+				free(tkn);
+				free(bufr);
+				exit(cde);
 			}
-			i = 0;
-			while (arguments[i])
-			{
-				free(arguments[i]);
-				i++;
-			}
-			free(arguments);
 		}
-		free(line);
-		free(line_copy);
+		free(bufr);
+		free(tkn);
+		exit(stats);
 	}
-	return (0);
 }
