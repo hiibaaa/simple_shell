@@ -1,59 +1,68 @@
-#include "shell.h"
-
+#include "simple_shell.h"
 
 /**
- * ptchar - function will write char to stdout
- * @c: The character to print
+ * init_shell_struct - Initialize the shell structure
+ * @shell: Pointer to the shell structure to be initialized
+ * @argv: Command-line argument array
+ * @env: Environment variable array
  */
-void ptchar(char c)
+
+void init_shell_struct(t_shell *shell, char **argv, char **env)
 {
-	write(1, &c, 1);
+	shell->argv = argv;
+	shell->env = env;
+	shell->error_counter = 0;
+	shell->status = 0;
 }
 
 /**
- * ps - function will print string
- *
- * @s: the characters
+ * main - Entry point of the shell program
+ * @argc: Number of command-line arguments
+ * @argv: Array of command-line argument strings
+ * @env: Array of environment variable strings
+ * Return: The exit status of the shell.
  */
-void ps(char *s)
+
+int main(int __attribute__((unused)) argc, char **argv, char **env)
 {
-	int x = 0;
+	t_shell shell;
 
-	if (!s)
-		return;
+	init_shell_struct(&shell, argv, env);
 
-	while (s[x])
+	sigintHandler(0);
+
+	while (1)
 	{
-		ptchar(s[x]);
-		x++;
+		if (isatty(STDIN_FILENO))
+		{
+			_putstr("$ ");
+		}
+
+		shell.line = get_next_line(STDIN_FILENO);
+
+		if (!shell.line)
+		{
+			if (isatty(STDIN_FILENO))
+			{
+				_putchar('\n');
+			}
+			break;
+		}
+
+		cut_string(shell.line);
+		shell.tokens = ft_split(shell.line, " \t\r\n");
+
+		if (shell.tokens)
+		{
+			if (shell.tokens[0])
+			{
+				shell.status = execute(&shell);
+			}
+
+			free_tokens(shell.tokens);
+		}
+
+		free(shell.line);
 	}
-}
-
-/**
- * cpchar - function will write char to stderr
- * @c: The character to print
- */
-void cpchar(char c)
-{
-	if (c)
-		write(2, &c, 1);
-}
-
-/**
- * sps -  function will print string to stderr.
- *
- * @s: the characters
- */
-void sps(char *s)
-{
-	int x = 0;
-
-	if (!s)
-		return;
-
-	while (s[x] != '\0')
-	{
-		cpchar(s[x]);
-		x++;
-	}
+	return (shell.status);
 }
