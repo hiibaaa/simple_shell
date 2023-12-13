@@ -1,64 +1,69 @@
-#include "main.h"
+#include "shell.h"
+
 /**
-*pased_arguments - function that passes arguments
-*@line: pointer that takes a string containing text and tokenize it
-*Return: arguments
+ * outpt_env - function will print enviroment using global variable
+ * @ep: the environment
 */
-char **pased_arguments(char *line)
+void outpt_env(char **ep)
 {
-	char **arguments = malloc(MAX_ARGUMENTS * sizeof(char *));
-	char *token = strtok(line, " \t\n");
-	int arg_index = 0;
-	int i;
+	int x = 0;
 
-	if (!arguments)
+	while (ep[x])
 	{
-		perror("error memory allocation");
-
-		for (i = 0; i < arg_index; i++)
-		{
-			free(arguments[i]);
-		}
-		free(arguments);
-		exit(EXIT_FAILURE);
+		ps(ep[x]);
+		ptchar('\n');
+		x++;
 	}
-	while (token != NULL)
-	{
-		arguments[arg_index] = strdup(token);
-		arg_index++;
-
-		if (arg_index >= MAX_ARGUMENTS - 1)
-		{
-			fprintf(stderr, "too many arguments\n");
-
-			for (i = 0; i < arg_index; i++)
-			{
-				free(arguments[i]);
-			}
-			free(arguments);
-			break;
-		}
-		token = strtok(NULL, " \t\n");
-	}
-	arguments[arg_index] = NULL;
-	return (arguments);
 }
-/**
-*recreated_getenv - function that recreates the use of the command "getenv"
-*@name: name of the environ
-*Return: NULL or environ
-*/
-char *recreated_getenv(const char *name)
-{
-	int i;
 
-	for (i = 0; environ[i] != NULL; ++i)
-	{
-		if (strncmp(environ[i], name, strlen(name)) == 0)
-		{
-			if (environ[i][strlen(name)] == '=')
-			return (environ[i] + strlen(name) + 1);
-		}
-	}
-	return (NULL);
+/**
+ * cant_find - function will print error message
+ * @arv: the program
+ * @dsh: num line
+ * @comnd: the command
+ *
+*/
+void cant_find(char *arv, int dsh, char *comnd)
+{
+	sps(arv);
+	sps(": ");
+	mk_cnvrt(dsh);
+	sps(": ");
+	sps(comnd);
+	sps(": not found\n");
+}
+
+/**
+ * invalid_num - function will print error message
+ * @arv: the program
+ * @dsh: num line
+ * @numb: number to exit
+ *
+*/
+void invalid_num(char *arv, int dsh, char *numb)
+{
+	sps(arv);
+	sps(": ");
+	mk_cnvrt(dsh);
+	sps(": exit: Illegal number: ");
+	sps(numb);
+	sps("\n");
+}
+
+/**
+ * error_perm - function will print error message
+ * @arv: the program
+ * @dsh: num line.
+ * @comnd: the command
+ *
+*/
+
+void error_perm(char *arv, int dsh, char *comnd)
+{
+	sps(arv);
+	sps(": ");
+	mk_cnvrt(dsh);
+	sps(": ");
+	sps(comnd);
+	sps(": Permission denied\n");
 }
