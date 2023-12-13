@@ -1,87 +1,59 @@
-#include "main.h"
+#include "shell.h"
+
+
 /**
- *find_executable_path - function that finds the path of an executable command
- *@command: name of the command
- *@path: a colon-separated list of paths to search from
- *Return: command_path or null
+ * ptchar - function will write char to stdout
+ * @c: The character to print
  */
-char *find_executable_path(const char *command, const char *path)
+void ptchar(char c)
 {
-	char *path_copy = strdup(path);
-	char *token = strtok(path_copy, ":");
-	char command_path[1024];
-
-	while (token != NULL)
-	{
-		sprintf(command_path, "%s/%s", token, command);
-
-		if (access(command_path, X_OK) == 0)
-		{
-			free(path_copy);
-			return (strdup(command_path));
-		}
-		token = strtok(NULL, ":");
-	}
-	free(path_copy);
-	return (NULL);
+	write(1, &c, 1);
 }
+
 /**
- *execute_command - function that executes a command with arguments
- *@command: command to be executed
- *@arguments: array of arguments for the command
- *@line: pointer to the original line of command
+ * ps - function will print string
+ *
+ * @s: the characters
  */
-void execute_command(char *command, char **arguments, char **line)
+void ps(char *s)
 {
-	pid_t pid = fork();
+	int x = 0;
 
-	line = line;
+	if (!s)
+		return;
 
-	if (pid == 0)
+	while (s[x])
 	{
-		if (strchr(command, '/') != NULL)
-		{
-			if (execve(command, arguments, environ) == -1)
-			{
-				perror("Error");
-				exit(EXIT_FAILURE);
-			}
-		}
-		else
-		{
-			char *path = recreated_getenv("PATH");
-			char *command_path = find_executable_path(command, path);
-
-			if (command_path != NULL)
-			{
-				execve(command_path, arguments, environ);
-				free(command_path);
-			}
-			else
-			{
-				perror("Command not found");
-				exit(EXIT_FAILURE);
-			}
-		}
-	}
-	else if (pid < 0)
-	{
-		perror("Error");
-	}
-	else
-	{
-		waitpid(pid, NULL, 0);
+		ptchar(s[x]);
+		x++;
 	}
 }
-/**
- *print_environment - function that prints the environment
- */
-void print_environment(void)
-{
-	char **env_ptr;
 
-	for (env_ptr = environ; *env_ptr != NULL; env_ptr++)
+/**
+ * cpchar - function will write char to stderr
+ * @c: The character to print
+ */
+void cpchar(char c)
+{
+	if (c)
+		write(2, &c, 1);
+}
+
+/**
+ * sps -  function will print string to stderr.
+ *
+ * @s: the characters
+ */
+void sps(char *s)
+{
+	int x = 0;
+
+	if (!s)
+		return;
+
+	while (s[x] != '\0')
 	{
-		printf("%s\n", *env_ptr);
+		cpchar(s[x]);
+		x++;
 	}
 }

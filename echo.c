@@ -1,31 +1,59 @@
-#include "main.h"
+#include "shell.h"
+
+
 /**
- *display_prompt - print symbol $
+ * ptchar - function will write char to stdout
+ * @c: The character to print
  */
-void display_prompt(void)
+void ptchar(char c)
 {
-	fprintf(stdout, "$ ");
-	fflush(stdout);
+	write(1, &c, 1);
 }
 
-#define MAX_ARGUMENTS 64
+/**
+ * ps - function will print string
+ *
+ * @s: the characters
+ */
+void ps(char *s)
+{
+	int x = 0;
+
+	if (!s)
+		return;
+
+	while (s[x])
+	{
+		ptchar(s[x]);
+		x++;
+	}
+}
 
 /**
- *read_command - read command  write for the user
- *Return: line or NULL
+ * cpchar - function will write char to stderr
+ * @c: The character to print
  */
-char *read_command()
+void cpchar(char c)
 {
-	char *line = NULL;
-	size_t bufsize = 0;
-	ssize_t characters_read = getline(&line, &bufsize, stdin);
+	if (c)
+		write(2, &c, 1);
+}
 
-	if (characters_read == -1)
+/**
+ * sps -  function will print string to stderr.
+ *
+ * @s: the characters
+ */
+void sps(char *s)
+{
+	int x = 0;
+
+	if (!s)
+		return;
+
+	while (s[x] != '\0')
 	{
-		free(line);
-		return (NULL);
+		cpchar(s[x]);
+		x++;
 	}
-	line[strcspn(line, "\n")] = '\0';
-
-	return (line);
 }
